@@ -1,7 +1,7 @@
 ---
 status: active
 milestone: M1
-tickets: [1, 2, 3, 4, 5, 6]
+tickets: [1, 2, 3, 4, 5, 6, 10, 11]
 ---
 
 # Tower Craft
@@ -52,6 +52,9 @@ Children under 10 in the owner's family have no stacking game made for them. The
 - AC-16: The game uses no network and has no ads, purchases, analytics or external links.
 - AC-17: Project settings and docs let the owner export to iPad Air from a Mac: iOS export preset, orientation, safe areas, and `docs/BUILD_IPAD.md` with the steps, the free Apple ID 7-day reinstall, and Developer Mode.
 - AC-18: The layout holds on iPad portrait, iPad landscape and a resized desktop window.
+- AC-19: `README.md` is written in a short, scannable style (no emoji): one-line summary, TL;DR box, short bullets, one idea per section, single-action numbered steps. It covers what the game is, a quick start (install Godot, open the project, run the tests), the iPad install and weekly reinstall (linked to `docs/BUILD_IPAD.md`), the project layout, and what is done versus next.
+- AC-20: `docs/BUILD_IPAD.md` uses the same style: short numbered single-action steps, with warnings and tips in callouts.
+- AC-21: A ticket that changes how to run, test or build, or what is done, updates `README.md` in the same PR.
 
 ## Out of scope
 
@@ -65,4 +68,5 @@ App Store and TestFlight release, ads, purchases, accounts, online features, ana
 - 2026-11-09: Classic one-miss game over, no hearts. Why: owner choice.
 - 2026-11-09: Personal touch is the child's name only. Why: owner choice.
 - 2026-11-09: Targets iPad Air, built on a MacBook Pro M3 Pro. Why: owner's devices.
+- 2026-11-09: README and the iPad guide use a short, scannable ADHD-friendly style without emoji, and each ticket keeps the README current. Why: owner choice, so the weekly reinstall and quick start are easy to find.
 - 2026-11-09: Difficulty default is Easy; styles unlock by best score; no currency. Why: proposed defaults the owner accepted.
