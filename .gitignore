@@ -1,0 +1,12 @@
+# Godot
+.godot/
+*.translation
+export_presets.cfg.bak
+/build/
+/exports/
+*.import.bak
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

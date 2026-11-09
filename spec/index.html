@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tower Craft Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: one reading column with a sticky section index on wide screens; tables for parameters, pills for status. */
+  :root{
+    --bg:#f4f8fc; --surface:#ffffff; --ink:#1c2b44; --muted:#5c6c86; --line:#d9e3ef;
+    --accent:#e89a0c; --accent-ink:#4a2f00; --sky:#2f6fc4; --good:#1f8a5b; --warn:#b4600a;
+    --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+    --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0f1829; --surface:#17233a; --ink:#e6edf8; --muted:#9db0cc; --line:#2a3b58;
+    --accent:#ffbd3d; --accent-ink:#2a1a00; --sky:#7db2f5; --good:#52c490; --warn:#f0a050;color-scheme:dark}}
+  :root[data-theme="dark"]{
+    --bg:#0f1829; --surface:#17233a; --ink:#e6edf8; --muted:#9db0cc; --line:#2a3b58;
+    --accent:#ffbd3d; --accent-ink:#2a1a00; --sky:#7db2f5; --good:#52c490; --warn:#f0a050;color-scheme:dark}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body)}
+  .shell{max-width:1080px;margin:0 auto;padding:32px 20px 80px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px}
+  nav{position:sticky;top:24px;align-self:start;font-size:14px}
+  nav b{display:block;font-family:var(--display);font-size:18px;margin-bottom:12px}
+  nav a{display:block;padding:4px 0 4px 10px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none}
+  nav a:hover,nav a:focus-visible{color:var(--ink);border-color:var(--accent);outline:none}
+  main{min-width:0;display:flex;flex-direction:column;gap:44px}
+  header{display:flex;flex-direction:column;gap:12px}
+  h1{font:800 clamp(34px,6vw,52px)/1.05 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+  h2{font:800 26px/1.2 var(--display);margin:0 0 14px;letter-spacing:-.01em;text-wrap:balance}
+  h3{font:700 17px/1.3 var(--display);margin:20px 0 6px}
+  p{margin:0 0 12px;max-width:68ch}
+  .lede{font-size:18px;color:var(--muted);max-width:60ch}
+  .meta{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+  .pill.ok{color:var(--good);border-color:var(--good)} .pill.open{color:var(--warn);border-color:var(--warn)} .pill.acc{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  section{scroll-margin-top:24px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:15px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td.num,code{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px}
+  ul,ol{margin:0 0 12px;padding-left:22px;max-width:68ch} li{margin-bottom:4px}
+  .callout{border-left:4px solid var(--accent);background:var(--surface);padding:14px 18px;border-radius:0 10px 10px 0}
+  .rule{border-left:4px solid var(--sky)}
+  a.btn{display:inline-block;padding:8px 16px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:600;text-decoration:none}
+  a.btn:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+  @media (max-width:820px){.shell{grid-template-columns:1fr;gap:20px}nav{position:static;display:flex;flex-wrap:wrap;gap:6px 14px}nav b{width:100%;margin-bottom:0}nav a{border:0;padding:0}.grid2{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav aria-label="Sections">
+  <b>Tower Craft</b>
+  <a href="#summary">Summary</a>
+  <a href="#gameplay">Gameplay</a>
+  <a href="#kids">Kid tailoring</a>
+  <a href="#params">Parameters</a>
+  <a href="#progression">Progression</a>
+  <a href="#art">Art and audio</a>
+  <a href="#ui">Screens and HUD</a>
+  <a href="#platforms">Platforms</a>
+  <a href="#tech">Tech and build</a>
+  <a href="#scope">Scope and milestones</a>
+  <a href="#open">Open questions</a>
+</nav>
+<main>
+
+<header>
+  <div class="meta"><span class="pill acc">Spec v1.2</span><span class="pill ok">Decisions locked</span><span class="pill ok">Prototype v2 approved</span><span class="pill">Private family build</span><span class="pill">9 Nov 2026</span></div>
+  <h1>Tower Craft</h1>
+  <p class="lede">A one-tap stacking game made for children under 10 to play on an iPad Air at home. A crane swings a house over a tower. Tap to drop it and keep building.</p>
+  <p><a class="btn" href="https://claude.ai/artifact/B23oTuta8hqGyXomadt7GN">Play the prototype</a></p>
+</header>
+
+<section id="summary">
+  <h2>Summary</h2>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">Product</h3><p>A private game for your own family. It is not published to the App Store or TestFlight. No ads, no purchases, no accounts, no network.</p></div>
+    <div class="card"><h3 style="margin-top:0">Core loop</h3><p>Swing, tap, drop, slice, stack. Score is the number of houses stacked. One miss ends the run, as in the classic version.</p></div>
+    <div class="card"><h3 style="margin-top:0">Engine</h3><p>Godot 4, 2D, GDScript. Developed on Windows, Linux or macOS. The iPad build is made on your MacBook Pro (M3 Pro).</p></div>
+    <div class="card"><h3 style="margin-top:0">Target</h3><p>Your iPad Air, in portrait and landscape. A Mac desktop build is kept for testing. iPhone is optional later.</p></div>
+  </div>
+  <div class="callout" style="margin-top:14px"><p style="margin:0"><b>Decisions locked.</b> 2D, not 3D. The art in the approved prototype is the final art. No store release. One miss ends the run. The only personal touch is the child's name. The game is tailored to children under 10, so the details in "Kid tailoring" matter more than commercial features.</p></div>
+</section>
+
+<section id="gameplay">
+  <h2>Gameplay</h2>
+  <h3>Round flow</h3>
+  <ol>
+    <li>A house hangs from a crane hook and swings left and right over the tower on a rope.</li>
+    <li>The child taps anywhere. The house releases and falls straight down.</li>
+    <li>On landing, the game compares the house to the top of the tower and resolves one of three outcomes.</li>
+    <li>The camera scrolls up, the next house appears and the swing continues slightly faster.</li>
+  </ol>
+  <h3>Landing outcomes</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Outcome</th><th>Condition (Easy default)</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td><b>Perfect</b></td><td>Offset under 12% of a house width (Easy)</td><td>House snaps to the tower centre and keeps its full width. Streak +1. A cheerful "Perfect!" pop-up shows.</td></tr>
+      <tr><td><b>Partial</b></td><td>Some overlap with the top house</td><td>The house is trimmed to the overlap. The overhang breaks off and tumbles away. Streak resets to 0.</td></tr>
+      <tr><td><b>Miss</b></td><td>No overlap with the top house</td><td>The whole house tumbles away with a friendly "Oops!" and the run ends. The tower stays on screen while the result appears.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Regrow</h3>
+  <p>From the second perfect in a row on Easy (third on Normal), each perfect landing makes that house 15% wider on Easy (12% on Normal), up to the full starting width. A narrow tower can always recover.</p>
+</section>
+
+<section id="kids">
+  <h2>Kid tailoring</h2>
+  <p>These choices make the game gentle and personal. Each one is a setting or a data value, so it can change as the children grow.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Area</th><th>Decision</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Classic game over</b></td><td>One miss ends the run. There are no hearts or extra tries. A soft, friendly game-over screen and a big Play again button make restarting quick.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Difficulty presets</b></td><td>Easy (default), Normal and Hard. Easy has a wider perfect window, slower swing and a lower speed cap, to make up for one-miss game over. Hard matches the approved prototype. Chosen per child in the parent area. Suggested start: Easy for the youngest, Normal for older children.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Player profiles</b></td><td>One profile per child with a name, a favourite house style, a difficulty setting and separate best scores. Up to four profiles on one iPad.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Personal touches</b></td><td>The child's name only: on the title screen and in cheers ("Great stacking, Mia!"). No photos, drawings or custom messages.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Reading level</b></td><td>Large icons and numbers first. Short words only. Every button has an icon. A voice cheer option for pre-readers (children under about 6).</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Touch targets</b></td><td>Tap anywhere to drop. Buttons are at least 64 pt. No tiny controls near the screen edge.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Mood</b></td><td>No scary or harsh sounds. No timers or pressure messages. Falling houses make a soft thud. Streaks and milestones get confetti.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Parent gate</b></td><td>Settings, profile edits and "reset progress" need a 3-second press-and-hold on a corner icon.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Safety</b></td><td>No network access, no ads, no purchases, no external links, no analytics. All data stays on the iPad.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td><b>Session care</b></td><td>An optional gentle "time for a break" screen after a set number of minutes, set by the parent. Off by default.</td><td><span class="pill open">Confirm</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="params">
+  <h2>Tuning parameters</h2>
+  <p>Hard equals the approved prototype. Easy and Normal are starting points to tune by playing with the children. All values live in one data file.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Parameter</th><th>Easy</th><th>Normal</th><th>Hard (prototype)</th></tr></thead>
+    <tbody>
+      <tr><td>Perfect tolerance (units)</td><td class="num">0.12</td><td class="num">0.09</td><td class="num">0.07</td></tr>
+      <tr><td>Regrow after streak of</td><td class="num">2 perfects</td><td class="num">3 perfects</td><td class="num">3 perfects</td></tr>
+      <tr><td>Regrow amount (units)</td><td class="num">+0.15</td><td class="num">+0.12</td><td class="num">+0.12</td></tr>
+      <tr><td>Swing speed start (rad/s)</td><td class="num">1.1</td><td class="num">1.3</td><td class="num">1.5</td></tr>
+      <tr><td>Swing speed growth per house</td><td class="num">0.025</td><td class="num">0.035</td><td class="num">0.045</td></tr>
+      <tr><td>Swing speed cap (rad/s)</td><td class="num">2.2</td><td class="num">2.8</td><td class="num">3.5</td></tr>
+      
+    </tbody>
+  </table></div>
+  <h3>Shared values</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>House width (1.0 unit)</td><td class="num">30% of screen width, max 240 px</td><td>Also capped at 22% of screen height. All gameplay maths uses this unit.</td></tr>
+      <tr><td>House height</td><td class="num">1.15 units</td><td>Stack step is 1.06 units, so houses overlap slightly.</td></tr>
+      <tr><td>Swing amplitude</td><td class="num">±2.4 units, limited to 42% of screen width</td><td>Rope pivots from the top centre of the screen.</td></tr>
+      <tr><td>Gravity</td><td class="num">11 units/s²</td><td>Applies to the dropped house and to broken pieces.</td></tr>
+      <tr><td>Camera</td><td class="num">Tower top held at about 60% of screen height</td><td>Eases toward target at 3.5 per second.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="progression">
+  <h2>Progression and rewards</h2>
+  <p>There is no currency and nothing to buy. Rewards come from playing, and every child sees something new early.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Item</th><th>Default</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>House styles</td><td>Six styles from the prototype: Sunny, Rose, Mint, Sky, Clay, Mixed. Sunny is open from the start.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td>Unlocks</td><td>A style unlocks when that child's best score reaches 5, 10, 15, 25 and 40 houses.</td><td><span class="pill open">Tune</span></td></tr>
+      <tr><td>Stars</td><td>Each run earns 1 to 3 stars from its score. Stars show on the game-over screen and profile.</td><td><span class="pill open">Tune</span></td></tr>
+      <tr><td>Style effect</td><td>Cosmetic only. No gameplay difference.</td><td><span class="pill ok">Set</span></td></tr>
+      <tr><td>Stored on the iPad</td><td>Profiles, best scores, recent scores, unlocked styles, selected style and settings.</td><td><span class="pill ok">Set</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="art">
+  <h2>Art and audio</h2>
+  <h3>Art: the prototype is final</h3>
+  <ul>
+    <li>The houses, logo, sky, clouds and ground strip from prototype v2 are the shipped art. They are drawn with code in the prototype, so the Godot version redraws the same shapes into sprite images at high resolution, so they stay sharp on iPad screens.</li>
+    <li>Sky gradient shifts with altitude: day blue, clear afternoon, dusk, then space.</li>
+    <li>Drifting cloud layers and a hazard-stripe ground strip that scrolls away as the tower grows.</li>
+    <li>New for kids: confetti on milestones, a smiling sun in the corner that reacts to perfect landings, and soft bounce animation on every landing.</li>
+  </ul>
+  <div class="callout rule"><p style="margin:0"><b>Original art only.</b> All art is drawn for this game and must stay free of other games' artwork and logos.</p></div>
+  <h3>Audio and feedback</h3>
+  <ul>
+    <li>Soft drop sound, landing thud and a rising-pitch chime on each perfect in a streak.</li>
+    <li>A calm looping music track, with separate music and sound toggles in settings.</li>
+    <li>Optional voice cheers (for example "Nice!" and "Wow!") for children who do not read yet.</li>
+    <li>iPad haptics are not available, so feedback is audio and visual only.</li>
+  </ul>
+</section>
+
+<section id="ui">
+  <h2>Screens and HUD</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Screen</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><b>Who is playing</b></td><td>Big profile pictures (a house style each) with names. Tap one to continue. Skipped when there is only one profile.</td></tr>
+      <tr><td><b>Title</b></td><td>Logo, the child's name, a live demo tower, a big Play button, best score, house style picker.</td></tr>
+      <tr><td><b>Game</b></td><td>Score at the top centre, "Recent" scores down the right edge, a short hint before the first tap, pop-ups and confetti.</td></tr>
+      <tr><td><b>Run complete</b></td><td>Score, best, stars, any newly unlocked style, Play again and Home buttons.</td></tr>
+      <tr><td><b>Styles</b></td><td>Grid of the six house styles with locked ones shown as a silhouette and the score needed to open them.</td></tr>
+      <tr><td><b>Parent area</b></td><td>Behind the hold-to-open gate: difficulty, profiles, sound, voice, break timer and reset progress.</td></tr>
+    </tbody>
+  </table></div>
+  <p style="margin-top:12px">All screens respect device safe areas and scale from the gameplay unit, so layout holds in every iPad orientation and in Split View.</p>
+</section>
+
+<section id="platforms">
+  <h2>Platforms and input</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Platform</th><th>Role</th><th>Input</th></tr></thead>
+    <tbody>
+      <tr><td>iPad Air (iPadOS)</td><td>Main target. Portrait and landscape.</td><td>Tap anywhere</td></tr>
+      <tr><td>MacBook Pro M3 Pro (macOS 27.2)</td><td>Build machine for the iPad, plus testing and optional family play.</td><td>Click anywhere or press Space or Enter</td></tr>
+      <tr><td>Windows and Linux</td><td>Development and automated tests only.</td><td>Click or Space</td></tr>
+      <tr><td>iPhone (iOS)</td><td>Optional later. The same build should run in portrait.</td><td>Tap anywhere</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="tech">
+  <h2>Tech and build</h2>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">Engine and language</h3><p>Godot 4 with GDScript. Scenes for profile pick, title, game, run complete, styles and parent area. All tuning in one resource file.</p></div>
+    <div class="card"><h3 style="margin-top:0">Development hosts</h3><p>Windows, Linux and macOS all run the same project. Logic tests run on any of them.</p></div>
+    <div class="card"><h3 style="margin-top:0">iPad install</h3><p>Export the Godot project to Xcode on your MacBook Pro, sign it with your own Apple ID and install it on the iPad Air by cable or Wi-Fi. The iPad needs Developer Mode turned on. At M2 we check that your Xcode version supports your iPadOS version.</p></div>
+    <div class="card"><h3 style="margin-top:0">No store release</h3><p>No App Store, no TestFlight, no store listing, screenshots or review. A paid Apple Developer account is optional.</p></div>
+  </div>
+  <h3>What a free Apple ID means</h3>
+  <ul>
+    <li>The installed app expires after 7 days. To keep it playable, reinstall from Xcode on the Mac about once a week.</li>
+    <li>A free account allows only a few apps installed this way at a time, which is enough for this game.</li>
+    <li>The paid Apple Developer account ($99 per year) extends the install to one year and allows private TestFlight builds for family. It is a convenience, not a requirement.</li>
+  </ul>
+  <h3>Project layout (proposed)</h3>
+  <ul>
+    <li><code>/game</code> Godot project: scenes, scripts, resources, art and audio.</li>
+    <li><code>/game/data/tuning.tres</code> the parameters from the tables above.</li>
+    <li><code>/prototype</code> the approved browser prototype, kept as the feel reference.</li>
+    <li><code>/spec</code> this document.</li>
+  </ul>
+  <h3>Testing</h3>
+  <ul>
+    <li>Unit tests for the landing maths: perfect, partial, miss and regrow, at several screen sizes.</li>
+    <li>A deterministic mode with a fixed swing phase for repeatable tests.</li>
+    <li>Play-testing with the children on the real iPad after each milestone. Their feedback sets the final Easy and Normal numbers.</li>
+  </ul>
+</section>
+
+<section id="scope">
+  <h2>Scope and milestones</h2>
+  <p>The order below gets a playable iPad version in front of the children as early as possible. Durations are rough and assume one developer.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>#</th><th>Milestone</th><th>Done when</th><th>Rough effort</th></tr></thead>
+    <tbody>
+      <tr><td class="num">M0</td><td>Browser prototype</td><td>Approved by you</td><td><span class="pill ok">Done</span></td></tr>
+      <tr><td class="num">M1</td><td>Godot core loop</td><td>Swing, drop, slice, regrow, one-miss game over and the three difficulty presets work on desktop</td><td>1 to 1.5 weeks</td></tr>
+      <tr><td class="num">M2</td><td>iPad install</td><td>The core loop runs on your iPad from Xcode, with safe areas and rotation working. Children can try it.</td><td>3 to 5 days</td></tr>
+      <tr><td class="num">M3</td><td>Family features</td><td>Profiles, names, style unlocks, stars, parent gate and parent area, saved progress</td><td>1 week</td></tr>
+      <tr><td class="num">M4</td><td>Polish</td><td>Prototype art redrawn at full resolution, audio, music, voice cheers, confetti, smiling sun</td><td>1 week</td></tr>
+      <tr><td class="num">M5</td><td>Family hardening</td><td>Tuned with the children, break timer, weekly reinstall steps written down, backups of the project</td><td>3 to 5 days</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Out of scope</h3>
+  <ul>
+    <li>App Store or TestFlight release, store listing, screenshots and review.</li>
+    <li>Ads, purchases, accounts, online features, analytics and any data leaving the device.</li>
+    <li>Level challenges, daily challenge, sandbox mode, power-ups and controller support.</li>
+    <li>Any betting, stake, payout or multiplier mechanic.</li>
+  </ul>
+</section>
+
+<section id="open">
+  <h2>Open questions</h2>
+  <p>The main decisions are locked. These small items remain and do not block M1.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Question</th><th>Default if you do not answer</th></tr></thead>
+    <tbody>
+      <tr><td>How many children will have a profile, and what are their ages?</td><td>Up to four profiles. Easy for the youngest, Normal for ages 7 to 9.</td></tr>
+      <tr><td>Which iPad Air generation and iPadOS version do you have?</td><td>Checked at M2 when we install the first build.</td></tr>
+      <tr><td>Do you want the paid Apple Developer account later to avoid weekly reinstalls?</td><td>No. Use a free Apple ID and reinstall weekly.</td></tr>
+      <tr><td>Who will record the voice cheers: you, a family member or a text-to-speech voice?</td><td>Text-to-speech voice, replaceable later with family recordings.</td></tr>
+      <tr><td>Should a break reminder be turned on?</td><td>Off. A parent can turn it on in the parent area.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</main>
+</div>
+</body>
+</html>
