@@ -195,8 +195,20 @@ func test_popup_hidden_on_run_complete() -> void:
 		while not sim.fall.is_empty() and n < 1000:
 			main.advance(0.016)
 			n += 1
-	for i in 80:
+	# The pop-up normally expires before the run-complete delay ends, so hold it
+	# (negative time) to prove the screen switch itself clears it.
+	var n2 := 0
+	while sim.state != GameSim.State.OVER and n2 < 1000:
+		main.advance(0.016)
+		n2 += 1
+	main.pop_text = "PERFECT x1"
+	main.pop_time = -5.0
+	main.confetti.burst(100.0, 100.0)
+	n2 = 0
+	while not main._complete_shown and n2 < 1000:
+		check(main.pop_visible(), "pop-up still showing before run complete")
 		main.advance(0.02)
+		n2 += 1
 	check_eq(main.screen, main.Screen.OVER)
 	check(not main.pop_visible(), "no pop-up on run complete")
 	check_eq(main.confetti.pieces.size(), 0, "no confetti on run complete")
