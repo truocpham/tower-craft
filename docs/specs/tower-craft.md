@@ -1,7 +1,7 @@
 ---
 status: active
 milestone: M1
-tickets: []
+tickets: [1, 2, 3, 4, 5, 6]
 ---
 
 # Tower Craft
