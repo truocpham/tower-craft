@@ -18,6 +18,15 @@ extends Resource
 @export var gravity_units: float = 0.0
 @export var camera_tower_top_screen_fraction: float = 0.0
 @export var camera_ease_per_second: float = 0.0
+@export var hang_height_units: float = 0.0
+@export var hang_sag_units: float = 0.0
+@export var hang_tilt_radians: float = 0.0
+@export var hook_offset_units: float = 0.0
+@export var debris_speed_partial: float = 0.0
+@export var debris_spin_partial: float = 0.0
+@export var debris_speed_miss: float = 0.0
+@export var debris_spin_miss: float = 0.0
+@export var game_over_delay_seconds: float = 0.0
 
 
 func preset(difficulty: String) -> DifficultyPreset:
