@@ -1,0 +1,38 @@
+schema: 1
+tracker:
+  type: github
+ci: on-merge
+commands:
+  install: bash tools/godot.sh --version
+  build: bash tools/godot.sh --headless --path game --import --quit
+  test: bash tools/godot.sh --headless --path game -s res://tests/run_tests.gd
+concurrency: 2
+limits:
+  maxRounds: 3
+  wallClockMinutes: 240
+models:
+  planner: claude-sonnet-5-5
+  dev: claude-sonnet-5-5
+  qa: claude-sonnet-5-5
+  reviewer: claude-sonnet-5-5
+  retro: claude-sonnet-5-5
+  architect: claude-sonnet-5-5
+  security: claude-sonnet-5-5
+advisor: claude-opus-5-5
+roles: []
+gates: []
+architect:
+  detailDesign: on-request
+flow: gated
+merge:
+  auto: true
+specsDir: docs/specs
+learning:
+  mode: collect
+  roles:
+    - planner
+    - dev
+    - qa
+    - reviewer
+    - architect
+    - security
