@@ -12,7 +12,6 @@ const SKY := [
 	[Color8(32, 50, 120), Color8(80, 100, 180)],
 	[Color8(12, 16, 50), Color8(40, 40, 100)],
 ]
-const SKY_FULL_ALTITUDE := 60.0
 const MIXED := ["sunny", "rose", "mint", "sky", "clay", "cream"]
 
 var tuning: Tuning
@@ -230,12 +229,12 @@ func advance(delta: float) -> void:
 
 ## Title backdrop: a tower that builds itself, then starts over.
 func _demo(delta: float) -> void:
-	if sim.state == GameSim.State.OVER or sim.score >= 3:
+	if sim.state == GameSim.State.OVER or sim.score >= tuning.demo_tower_blocks:
 		_demo_wait += delta
-		if _demo_wait > 1.5:
+		if _demo_wait > tuning.demo_restart_delay_seconds:
 			_demo_wait = 0.0
 			_new_sim()
-	elif sim.fall.is_empty() and absf(sim.hang_pos()["x"]) < 0.05:
+	elif sim.fall.is_empty() and absf(sim.hang_pos()["x"]) < tuning.demo_drop_window_units:
 		sim.drop()
 
 
@@ -275,7 +274,7 @@ func _draw() -> void:
 
 
 func _draw_sky(w: float, h: float) -> void:
-	var t := minf(sim.cam_y / SKY_FULL_ALTITUDE, 1.0) * (SKY.size() - 1)
+	var t := minf(sim.cam_y / tuning.sky_full_altitude_units, 1.0) * (SKY.size() - 1)
 	var i := mini(int(floor(t)), SKY.size() - 2)
 	var f := t - i
 	var top: Color = SKY[i][0].lerp(SKY[i + 1][0], f)
@@ -366,8 +365,8 @@ func _draw_ui(w: float, h: float) -> void:
 	var vmin := minf(w, h)
 	if screen == Screen.PLAY or screen == Screen.OVER:
 		_text(str(sim.score), h * 0.05 + vmin * 0.11, int(clampf(vmin * 0.11, 48, 100) * 1.4), Color.WHITE)
-	if pop_time < 0.7 and pop_text != "":
-		var a := 1.0 - pop_time / 0.7
+	if pop_time < tuning.pop_seconds and pop_text != "":
+		var a := 1.0 - pop_time / tuning.pop_seconds
 		_text(pop_text, h * 0.18 + vmin * 0.045, int(clampf(vmin * 0.045, 20, 36) * 1.6), Color(1, 1, 1, a))
 	var small := int(maxf(vmin * 0.03, 16.0))
 	if screen == Screen.PLAY and sim.fall.is_empty() and sim.score == 0:

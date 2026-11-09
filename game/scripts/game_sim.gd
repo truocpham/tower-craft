@@ -36,7 +36,6 @@ var landed_serial: int = 0
 var unit_px: float = 200.0
 var view_w: float = 1080.0
 var view_h: float = 1920.0
-var ground_frac: float = 0.9
 
 
 func _init(t: Tuning, difficulty: String = "") -> void:
@@ -58,7 +57,7 @@ static func layout_unit(w: float, h: float, t: Tuning) -> float:
 
 
 func ground_y() -> float:
-	return view_h * ground_frac
+	return view_h * tuning.ground_screen_fraction
 
 
 func palette_for(i: int) -> String:
@@ -122,14 +121,14 @@ func drop() -> bool:
 
 
 func step(dt: float) -> void:
-	dt = minf(dt, 0.05)
+	dt = minf(dt, tuning.max_step_seconds)
 	phase += dt * omega()
 	if state == State.OVER:
 		over_time += dt
 	if state == State.PLAY and not fall.is_empty():
 		fall["vy"] += tuning.gravity_units * dt
 		fall["wb"] -= fall["vy"] * dt
-		fall["rot"] *= pow(0.9, dt * 60.0)
+		fall["rot"] *= pow(tuning.fall_rotation_damping, dt * 60.0)
 		var target: float = blocks.size() * tuning.stack_step_units
 		if fall["wb"] <= target:
 			fall["wb"] = target
@@ -142,7 +141,7 @@ func step(dt: float) -> void:
 		d["hi"] += d["vx"] * dt
 		d["fcx"] += d["vx"] * dt
 		d["rot"] += d["vr"] * dt
-		if d["wb"] < cam_y - 12.0:
+		if d["wb"] < cam_y - tuning.debris_cull_below_camera_units:
 			debris.remove_at(i)
 	cam_y += (cam_t - cam_y) * minf(dt * tuning.camera_ease_per_second, 1.0)
 

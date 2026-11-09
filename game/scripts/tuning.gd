@@ -27,6 +27,15 @@ extends Resource
 @export var debris_speed_miss: float = 0.0
 @export var debris_spin_miss: float = 0.0
 @export var game_over_delay_seconds: float = 0.0
+@export var ground_screen_fraction: float = 0.0
+@export var fall_rotation_damping: float = 0.0
+@export var max_step_seconds: float = 0.0
+@export var debris_cull_below_camera_units: float = 0.0
+@export var sky_full_altitude_units: float = 0.0
+@export var pop_seconds: float = 0.0
+@export var demo_restart_delay_seconds: float = 0.0
+@export var demo_tower_blocks: int = 0
+@export var demo_drop_window_units: float = 0.0
 
 
 func preset(difficulty: String) -> DifficultyPreset:
