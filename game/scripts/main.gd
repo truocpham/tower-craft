@@ -27,6 +27,10 @@ var clouds: Array = []
 var textures: Dictionary = {}
 var _seen_landing: int = 0
 var _font: Font
+var settings: GameSettings
+var audio: AudioManager
+var confetti := Confetti.new()
+var sun := SmilingSun.new()
 
 
 func _ready() -> void:
@@ -37,6 +41,11 @@ func _ready() -> void:
 		elif a.begins_with("--skin="):
 			skin = a.substr(7)
 	_font = ThemeDB.fallback_font
+	if settings == null:
+		settings = GameSettings.load_from()
+	audio = AudioManager.new()
+	audio.settings = settings
+	add_child(audio)
 	_build_sprites()
 	_new_sim()
 	var rng := RandomNumberGenerator.new()
@@ -82,7 +91,8 @@ func press() -> void:
 		Screen.START:
 			screen = Screen.PLAY
 		Screen.PLAY:
-			sim.drop()
+			if sim.drop():
+				audio.play_drop()
 		Screen.OVER:
 			if sim.game_over_ready():
 				_new_sim()
@@ -105,11 +115,21 @@ func _process(delta: float) -> void:
 func advance(delta: float) -> void:
 	sim.step(delta)
 	pop_time += delta
+	confetti.step(delta)
+	sun.step(delta)
 	if sim.landed_serial != _seen_landing:
 		_seen_landing = sim.landed_serial
+		audio.play_thud()
+		var milestone := sim.last_kind != "miss" and Confetti.is_milestone(sim.score)
 		if sim.last_kind == "perfect":
 			pop_text = sim.last_streak_text
 			pop_time = 0.0
+			sun.cheer()
+			audio.play_chime(sim.streak)
+		if milestone:
+			confetti.burst(sim.view_w, sim.view_h)
+		if milestone or (sim.last_kind == "perfect" and sim.streak % 3 == 0):
+			audio.cheer(milestone)
 		if sim.last_kind == "miss":
 			best = maxi(best, sim.score)
 	if screen == Screen.PLAY and sim.state == GameSim.State.OVER:
@@ -150,6 +170,8 @@ func _draw() -> void:
 	elif sim.state == GameSim.State.PLAY:
 		var hp := sim.hang_pos()
 		_hang(hp["x"], hp["wb"], sim.top_block()["w"], sim.palette_for(sim.blocks.size()), hp["rot"], true)
+	sun.draw(self, sim.unit_px)
+	confetti.draw(self)
 	_draw_ui(w, h)
 
 
