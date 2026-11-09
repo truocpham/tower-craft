@@ -9,6 +9,8 @@ const BLUE := Color("#3b6fb6")
 const RED := Color("#c0443c")
 const GREY := Color("#6b7385")
 const PANEL := Color(0.10, 0.16, 0.30, 0.82)
+## Width of the top-left corner button area (margin, button, gap) that the sun keeps clear of.
+const CORNER_CLEAR := 32.0 + ParentGate.SIZE + 16.0
 const DIFF_NAMES := {"easy": "Easy", "normal": "Normal", "hard": "Hard"}
 
 var main: Node
@@ -125,7 +127,7 @@ func _center(parent: Control, vertical_top: bool = false) -> Control:
 	m.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	m.add_theme_constant_override("margin_left", 40)
 	m.add_theme_constant_override("margin_right", 40)
-	m.add_theme_constant_override("margin_top", 150 if vertical_top else 40)
+	m.add_theme_constant_override("margin_top", 220 if vertical_top else 40)
 	m.add_theme_constant_override("margin_bottom", 40)
 	parent.add_child(m)
 	return m
@@ -298,6 +300,38 @@ func show_complete(result: Dictionary) -> void:
 	v.add_child(buttons)
 
 
+# ---------- break reminder ----------
+
+## Gentle full-screen "time for a break", shown after a run when the parent's reminder is due.
+func show_break() -> void:
+	var r := _screen()
+	var bg := ColorRect.new()
+	bg.color = Color("#2b4a7a")
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	r.add_child(bg)
+	var cc := CenterContainer.new()
+	cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	r.add_child(cc)
+	var v := _box(true, 36)
+	cc.add_child(v)
+	v.add_child(_icon("clock", 220, GOLD))
+	v.add_child(_label("Time for a break!", 96, GOLD))
+	v.add_child(_label("Stretch, have a drink,\nthen come back.", 52))
+	var keep := KButton.new("Keep playing", "play", GREEN, 700, 60)
+	keep.custom_minimum_size.y = 140
+	keep.pressed.connect(main.keep_playing)
+	var home := KButton.new("Go home", "home", BLUE, 560, 52)
+	home.custom_minimum_size.y = 120
+	home.pressed.connect(main.break_home)
+	for b in [keep, home]:
+		var c := CenterContainer.new()
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		c.add_child(b)
+		v.add_child(c)
+
+
 # ---------- parent area ----------
 
 func show_parent() -> void:
@@ -344,6 +378,7 @@ func show_parent() -> void:
 	v.add_child(_toggle("Voice", "voice_on", "voice"))
 	v.add_child(_section("Rest"))
 	v.add_child(_toggle("Break", "break_reminder", "clock"))
+	v.add_child(_minutes_button())
 	v.add_child(_section("Scores"))
 	var reset := KButton.new("Reset scores", "replay", RED, 460, 38)
 	reset.pressed.connect(func() -> void:
@@ -399,6 +434,18 @@ func _toggle(label: String, key: String, icon: String) -> Control:
 		_set_toggle(key, now)
 		b.text = "%s  %s" % [label, "On" if now else "Off"]
 		b.set_color(GREEN if now else GREY))
+	return b
+
+
+## Cycles the break reminder length through the options in tuning.tres.
+func _minutes_button() -> Control:
+	var opts: PackedInt32Array = main.tuning.break_minutes_options
+	var b := KButton.new("Every %d min" % store.settings["break_minutes"], "clock", BLUE, 400, 38)
+	b.pressed.connect(func() -> void:
+		var i := opts.find(store.settings["break_minutes"])
+		store.settings["break_minutes"] = opts[(i + 1) % opts.size()]
+		store.save()
+		b.text = "Every %d min" % store.settings["break_minutes"])
 	return b
 
 

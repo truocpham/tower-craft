@@ -3,7 +3,8 @@ extends Node2D
 ## and feeds it input. Look and feel ported from prototype/index.html.
 
 ## START is the title screen. WHO and PARENT are the profile picker and parent area.
-enum Screen { START, PLAY, OVER, WHO, PARENT }
+## BREAK is the "time for a break" screen shown after a run when the reminder is due.
+enum Screen { START, PLAY, OVER, WHO, PARENT, BREAK }
 
 const TUNING_PATH := "res://data/tuning.tres"
 const SKY := [
@@ -40,6 +41,7 @@ var settings: GameSettings
 var audio: AudioManager
 var confetti := Confetti.new()
 var sun := SmilingSun.new()
+var break_timer := BreakTimer.new()
 
 
 func _ready() -> void:
@@ -83,6 +85,7 @@ func apply_profile() -> void:
 	best = p["best"]
 	if settings != null:
 		settings.player_name = p["name"]
+	break_timer.configure(store.settings["break_reminder"], store.settings["break_minutes"])
 
 
 func go_home() -> void:
@@ -192,6 +195,7 @@ func _process(delta: float) -> void:
 func advance(delta: float) -> void:
 	if screen == Screen.START:
 		_demo(delta)
+	break_timer.step(delta, screen == Screen.PLAY)
 	if screen != Screen.PARENT and screen != Screen.WHO:
 		sim.step(delta)
 	pop_time += delta
@@ -220,7 +224,11 @@ func advance(delta: float) -> void:
 		last_result = {"score": sim.score, "best": best, "recent": store.current()["recent"].duplicate(), "new_best": r["new_best"], "unlocked": r["unlocked"]}
 	if screen == Screen.OVER and not _complete_shown and sim.game_over_ready():
 		_complete_shown = true
-		shell.show_complete(last_result)
+		if break_timer.run_ended():
+			screen = Screen.BREAK
+			shell.show_break()
+		else:
+			shell.show_complete(last_result)
 	for c in clouds:
 		c["x"] += c["v"] * delta
 		if c["x"] > 1.3:
@@ -268,7 +276,8 @@ func _draw() -> void:
 	elif sim.state == GameSim.State.PLAY:
 		var hp := sim.hang_pos()
 		_hang(hp["x"], hp["wb"], sim.top_block()["w"], sim.palette_for(sim.blocks.size()), hp["rot"], true)
-	sun.draw(self, sim.unit_px)
+	# On the title the switch-player button sits top-left; the sun clears it.
+	sun.draw(self, sim.unit_px, Shell.CORNER_CLEAR if screen == Screen.START else 0.0)
 	confetti.draw(self)
 	_draw_ui(w, h)
 
@@ -371,3 +380,15 @@ func _draw_ui(w: float, h: float) -> void:
 	var small := int(maxf(vmin * 0.03, 16.0))
 	if screen == Screen.PLAY and sim.fall.is_empty() and sim.score == 0:
 		_text("Tap / click / Space to drop", h * 0.97, small, Color.WHITE)
+
+
+## Break screen, "keep playing": starts a fresh run and the play clock over.
+func keep_playing() -> void:
+	break_timer.reset()
+	start_play()
+
+
+## Break screen, "home": the play clock starts over.
+func break_home() -> void:
+	break_timer.reset()
+	go_home()

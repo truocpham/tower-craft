@@ -17,7 +17,8 @@ var _next_id: int = 1
 
 
 static func default_settings() -> Dictionary:
-	return {"break_reminder": false}
+	var t: Tuning = load("res://data/tuning.tres")
+	return {"break_reminder": false, "break_minutes": t.break_minutes_default}
 
 
 func _init(p: String = DEFAULT_PATH) -> void:
@@ -45,8 +46,12 @@ func _apply(data: Dictionary) -> void:
 	var s = data.get("settings", {})
 	if s is Dictionary:
 		for k in settings:
-			if s.get(k) is bool:
+			if settings[k] is bool and s.get(k) is bool:
 				settings[k] = s[k]
+		var mins = s.get("break_minutes")
+		var t: Tuning = load("res://data/tuning.tres")
+		if _is_num(mins) and int(mins) in t.break_minutes_options:
+			settings["break_minutes"] = int(mins)
 	var plist = data.get("profiles", [])
 	if not plist is Array:
 		return

@@ -64,3 +64,5 @@ pop_seconds = 0.7
 demo_restart_delay_seconds = 1.5
 demo_tower_blocks = 3
 demo_drop_window_units = 0.05
+break_minutes_options = PackedInt32Array(10, 20, 30)
+break_minutes_default = 20
