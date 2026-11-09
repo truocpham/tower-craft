@@ -111,3 +111,22 @@ func test_names_cleaned_and_damaged_file() -> void:
 	s.load_file()
 	check_eq(s.profiles.size(), 1, "falls back to default")
 	DirAccess.remove_absolute(TMP)
+
+
+func test_wrongly_typed_fields_fall_back() -> void:
+	var f := FileAccess.open(TMP, FileAccess.WRITE)
+	f.store_string('{"current": "x", "settings": "no", "profiles": [{"id": "a", "name": 5, "style": [1], "difficulty": {}, "best": "9", "recent": "none"}, {"id": 1, "name": "Ok", "best": 7, "recent": [3, "x", 4.0]}, 12]}')
+	f.close()
+	var s := ProfileStore.new(TMP)
+	s.load_file()
+	check_eq(s.profiles.size(), 2, "bad entry kept with defaults, non-dict dropped")
+	var a: Dictionary = s.profiles[0]
+	check_eq(a["name"], "Player")
+	check_eq(a["style"], "sunny")
+	check_eq(a["difficulty"], "easy")
+	check_eq(a["best"], 0)
+	check_eq(a["recent"], [])
+	check_eq(s.profiles[1]["recent"], [3, 4])
+	check(s.profiles[0]["id"] != s.profiles[1]["id"], "unique ids")
+	check(not s.current().is_empty(), "current valid")
+	DirAccess.remove_absolute(TMP)

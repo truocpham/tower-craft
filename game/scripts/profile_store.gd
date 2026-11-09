@@ -54,23 +54,40 @@ func _apply(data: Dictionary) -> void:
 		if not p is Dictionary or profiles.size() >= MAX_PROFILES:
 			continue
 		var recent: Array = []
-		for r in p.get("recent", []):
-			recent.append(int(r))
-		var best := maxi(int(p.get("best", 0)), 0)
-		var style := str(p.get("style", "sunny"))
-		var diff := str(p.get("difficulty", "easy"))
+		var raw_recent = p.get("recent", [])
+		if raw_recent is Array:
+			for r in raw_recent:
+				if _is_num(r):
+					recent.append(maxi(int(r), 0))
+		var best := maxi(_int(p.get("best"), 0), 0)
+		var style = p.get("style")
+		style = style if style is String else "sunny"
+		var diff = p.get("difficulty")
+		diff = diff if diff is String else "easy"
+		var raw_name = p.get("name")
+		var id := _int(p.get("id"), _next_id)
+		if not find(id).is_empty():
+			id = _next_id
 		profiles.append({
-			"id": int(p.get("id", _next_id)),
-			"name": clean_name(str(p.get("name", ""))),
+			"id": id,
+			"name": clean_name(raw_name if raw_name is String else ""),
 			"style": style if Styles.is_unlocked(style, best) else "sunny",
 			"difficulty": diff if diff in DIFFICULTIES else "easy",
 			"best": best,
 			"recent": recent.slice(maxi(recent.size() - RECENT_COUNT, 0)),
 		})
 		_next_id = maxi(_next_id, profiles[-1]["id"] + 1)
-	current_id = int(data.get("current", -1))
+	current_id = _int(data.get("current"), -1)
 	if find(current_id).is_empty() and not profiles.is_empty():
 		current_id = profiles[0]["id"]
+
+
+static func _is_num(v) -> bool:
+	return v is int or v is float
+
+
+static func _int(v, fallback: int) -> int:
+	return int(v) if _is_num(v) else fallback
 
 
 func save() -> bool:
