@@ -5,7 +5,7 @@ extends SceneTree
 const TEST_DIR := "res://tests"
 
 
-func _init() -> void:
+func _initialize() -> void:
 	var failed := 0
 	var passed := 0
 	var files: Array[String] = []
@@ -18,12 +18,13 @@ func _init() -> void:
 		if script.get_base_script() == null:
 			continue  # helper, not a test case
 		var case = script.new()
+		case.tree = self
 		for m in script.get_script_method_list():
 			var name: String = m["name"]
 			if not name.begins_with("test_"):
 				continue
 			case.failures.clear()
-			case.call(name)
+			await case.call(name)
 			if case.failures.is_empty():
 				passed += 1
 				print("PASS %s::%s" % [f, name])

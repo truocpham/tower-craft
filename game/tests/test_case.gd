@@ -3,6 +3,8 @@ extends RefCounted
 ## Base class for test scripts.
 
 var failures: Array[String] = []
+## Set by the runner so scene tests can reach the tree.
+var tree: SceneTree
 
 
 func check(cond: bool, msg: String = "check failed") -> void:
