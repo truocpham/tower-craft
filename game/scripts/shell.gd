@@ -342,6 +342,8 @@ func show_parent() -> void:
 	r.add_child(bg)
 	var m := _center(r)
 	m.mouse_filter = Control.MOUSE_FILTER_PASS
+	m.resized.connect(func() -> void: _cap_column(m))
+	_cap_column(m)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	m.add_child(scroll)
@@ -387,6 +389,13 @@ func show_parent() -> void:
 			store.save()
 			show_parent()))
 	v.add_child(reset)
+
+
+## Keeps the parent area a centred column no wider than tuning's parent_column_max_width.
+func _cap_column(m: MarginContainer) -> void:
+	var side := maxf(40.0, (m.size.x - main.tuning.parent_column_max_width) / 2.0)
+	m.add_theme_constant_override("margin_left", int(side))
+	m.add_theme_constant_override("margin_right", int(side))
 
 
 func _section(t: String) -> Label:

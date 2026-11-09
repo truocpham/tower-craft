@@ -66,3 +66,4 @@ demo_tower_blocks = 3
 demo_drop_window_units = 0.05
 break_minutes_options = PackedInt32Array(10, 20, 30)
 break_minutes_default = 20
+parent_column_max_width = 1000.0
