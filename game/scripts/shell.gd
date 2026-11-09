@@ -8,6 +8,9 @@ const GREEN := Color("#2f9e5b")
 const BLUE := Color("#3b6fb6")
 const RED := Color("#c0443c")
 const GREY := Color("#6b7385")
+## Style tiles are opaque so the demo tower behind the title never shows through.
+const TILE_OPEN := Color(0.10, 0.16, 0.30, 1.0)
+const TILE_LOCKED := Color(0.05, 0.08, 0.16, 1.0)
 const PANEL := Color(0.10, 0.16, 0.30, 0.82)
 ## Width of the top-left corner button area (margin, button, gap) that the sun keeps clear of.
 const CORNER_CLEAR := 32.0 + ParentGate.SIZE + 16.0
@@ -228,7 +231,7 @@ func _style_tile(style: String, prof: Dictionary) -> Control:
 	b.disabled = false
 	for slot in ["normal", "hover", "pressed", "focus"]:
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = PANEL if open else Color(0.05, 0.08, 0.16, 0.8)
+		sb.bg_color = TILE_OPEN if open else TILE_LOCKED
 		sb.set_corner_radius_all(28)
 		if chosen:
 			sb.border_color = GOLD

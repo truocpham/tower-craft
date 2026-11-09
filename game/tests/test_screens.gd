@@ -62,6 +62,26 @@ func test_single_profile_skips_who_and_title_shows_name() -> void:
 	_free(main)
 
 
+func _tiles(n: Node, out: Array) -> Array:
+	if n is Button and n.custom_minimum_size == Vector2(250, 250):
+		out.append(n)
+	for c in n.get_children():
+		_tiles(c, out)
+	return out
+
+
+func test_style_tiles_are_opaque() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	var tiles := _tiles(main.shell, [])
+	check_eq(tiles.size(), Styles.ORDER.size(), "all style tiles found")
+	for t in tiles:
+		for slot in ["normal", "hover", "pressed", "focus"]:
+			var sb: StyleBoxFlat = t.get_theme_stylebox(slot)
+			check_eq(sb.bg_color.a, 1.0, "tile %s opaque" % slot)
+	_free(main)
+
+
 func test_several_profiles_show_who() -> void:
 	var main := _main(3)
 	await tree.process_frame
