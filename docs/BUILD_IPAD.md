@@ -21,7 +21,7 @@ Private family build for an iPad Air, made on a Mac (MacBook Pro M3 Pro) and ins
 ## 1. Install the tools on the Mac
 
 1. Install **Xcode** from the Mac App Store (large download). Open it once and accept the license. Then run `xcode-select --install` if the command line tools are missing.
-2. Install **Godot 4.4 (standard, not .NET)** from godotengine.org, or `brew install --cask godot`. The project targets 4.4.
+2. Install **Godot 4.7 or newer (standard, not .NET)** from godotengine.org, or `brew install --cask godot`. The project is verified on 4.7.
 3. In Godot: **Editor > Manage Export Templates > Download and Install** for the same version. The iOS export needs the templates.
 4. Clone this repository and open `game/project.godot` in Godot. Let it import.
 
