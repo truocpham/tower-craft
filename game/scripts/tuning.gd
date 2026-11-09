@@ -37,6 +37,11 @@ extends Resource
 @export var demo_tower_blocks: int = 0
 @export var demo_drop_window_units: float = 0.0
 
+@export_group("Break reminder")
+## Minutes of play the parent can choose from, and the default.
+@export var break_minutes_options: PackedInt32Array = PackedInt32Array()
+@export var break_minutes_default: int = 0
+
 
 func preset(difficulty: String) -> DifficultyPreset:
 	match difficulty:

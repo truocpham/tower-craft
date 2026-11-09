@@ -21,7 +21,7 @@ A one-tap house-stacking game for children, made with Godot 4.7 for iPad.
 - **Who is playing:** big profile tiles, skipped with one profile.
 - **Title:** child's name, live demo tower, Play, best score, six house styles.
 - **Run complete:** score, best, last five, new style, Again and Home. Tap or Space also restarts.
-- **Parent area:** hold the corner gear for 3 seconds. Difficulty (Easy default), players (up to four), music, sound, voice, break reminder, reset scores.
+- **Parent area:** hold the corner gear for 3 seconds. Difficulty (Easy default), players (up to four), music, sound, voice, break reminder (off by default; every 10, 20 or 30 minutes, default 20; the "time for a break" screen appears after the current run ends), reset scores.
 - **Styles:** Sunny is open. Rose, Mint, Sky, Clay and Mixed unlock at best 5, 10, 15, 25 and 40.
 - **Saves:** profiles in `user://tower_craft.json`, sound toggles in `user://settings.cfg`.
 
@@ -67,9 +67,10 @@ Done:
 - [x] iPad export setup and build guide (#6)
 - [x] Godot 4.7 alignment (#10)
 - [x] README and iPad guide (#11)
-- [x] Profiles, title, styles, run complete and parent area (#4, this PR)
+- [x] Profiles, title, styles, run complete and parent area (#4)
+- [x] Move leftover tuning literals into `tuning.tres` (#14)
+- [x] Break reminder and title screen sun overlap (#18)
 
 Next:
 
-- [x] Move leftover tuning literals into `tuning.tres` (#14)
-- [ ] Ticket #18
+- (nothing queued)

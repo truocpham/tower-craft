@@ -15,9 +15,10 @@ func step(dt: float) -> void:
 	joy = maxf(0.0, joy - dt / 1.2)
 
 
-func draw(ci: CanvasItem, unit: float) -> void:
+## `inset` moves the sun right, to clear a corner button.
+func draw(ci: CanvasItem, unit: float, inset: float = 0.0) -> void:
 	var r := clampf(unit * 0.16, 28.0, 56.0) * (1.0 + 0.25 * joy)
-	var c := Vector2(r * 1.8, r * 1.8 - joy * r * 0.3 * absf(sin(t * 14.0)))
+	var c := Vector2(inset + r * 1.8, r * 1.8 - joy * r * 0.3 * absf(sin(t * 14.0)))
 	for k in 12:
 		var d := Vector2.from_angle(TAU * k / 12.0 + t * 0.4)
 		ci.draw_line(c + d * r * 1.25, c + d * r * (1.6 + 0.35 * joy), Color8(255, 201, 60), 4.0, true)
