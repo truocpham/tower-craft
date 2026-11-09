@@ -145,3 +145,71 @@ func test_parent_area_edits() -> void:
 	main.close_parent()
 	check_eq(main.difficulty, "hard", "difficulty applied")
 	_free(main)
+
+
+## Plays one perfect landing on a fresh run.
+func _perfect(main: Node) -> void:
+	main.press()
+	var sim: GameSim = main.sim
+	sim.phase = 0.0
+	main.press()
+	var n := 0
+	while not sim.fall.is_empty() and n < 1000:
+		main.advance(0.016)
+		n += 1
+
+
+func test_popup_hidden_on_title_and_menus() -> void:
+	var main := _main(2)
+	await tree.process_frame
+	main.choose_profile(main.store.current_id)
+	main.start_play()
+	_perfect(main)
+	main.confetti.burst(100.0, 100.0)
+	check(main.pop_visible(), "pop-up shows after a perfect")
+	main.go_home()
+	check(not main.pop_visible(), "no pop-up on title")
+	check_eq(main.confetti.pieces.size(), 0, "no confetti on title")
+	check_eq(main.sun.joy, 0.0, "sun calm on title")
+	main.start_play()
+	_perfect(main)
+	main.go_who()
+	check(not main.pop_visible(), "no pop-up on who")
+	main.start_play()
+	_perfect(main)
+	check(main.pop_visible(), "pop-up before new run")
+	main.start_play()
+	check(not main.pop_visible(), "new run clears pop-up")
+	_free(main)
+
+
+func test_popup_hidden_on_run_complete() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	main.press()
+	var sim: GameSim = main.sim
+	for target in [0.0, 0.0, 3.0]:
+		sim.phase = asin(clampf(target / sim.amplitude(), -1.0, 1.0))
+		main.press()
+		var n := 0
+		while not sim.fall.is_empty() and n < 1000:
+			main.advance(0.016)
+			n += 1
+	# The pop-up normally expires before the run-complete delay ends, so hold it
+	# (negative time) to prove the screen switch itself clears it.
+	var n2 := 0
+	while sim.state != GameSim.State.OVER and n2 < 1000:
+		main.advance(0.016)
+		n2 += 1
+	main.pop_text = "PERFECT x1"
+	main.pop_time = -5.0
+	main.confetti.burst(100.0, 100.0)
+	n2 = 0
+	while not main._complete_shown and n2 < 1000:
+		check(main.pop_visible(), "pop-up still showing before run complete")
+		main.advance(0.02)
+		n2 += 1
+	check_eq(main.screen, main.Screen.OVER)
+	check(not main.pop_visible(), "no pop-up on run complete")
+	check_eq(main.confetti.pieces.size(), 0, "no confetti on run complete")
+	_free(main)

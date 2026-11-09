@@ -88,7 +88,21 @@ func apply_profile() -> void:
 	break_timer.configure(store.settings["break_reminder"], store.settings["break_minutes"])
 
 
+## Drops the pop-up text, confetti and the sun cheer so none lingers on another screen.
+func clear_effects() -> void:
+	pop_text = ""
+	pop_time = 99.0
+	confetti.pieces.clear()
+	sun.joy = 0.0
+
+
+## True while the perfect pop-up text is being drawn.
+func pop_visible() -> bool:
+	return pop_text != "" and pop_time < tuning.pop_seconds
+
+
 func go_home() -> void:
+	clear_effects()
 	screen = Screen.START
 	_complete_shown = false
 	_new_sim()
@@ -96,6 +110,7 @@ func go_home() -> void:
 
 
 func go_who() -> void:
+	clear_effects()
 	screen = Screen.WHO
 	_new_sim()
 	shell.show_who()
@@ -116,6 +131,7 @@ func pick_style(style: String) -> void:
 
 
 func open_parent() -> void:
+	clear_effects()
 	screen = Screen.PARENT
 	shell.show_parent()
 
@@ -129,6 +145,7 @@ func close_parent() -> void:
 
 
 func start_play() -> void:
+	clear_effects()
 	shell.clear()
 	_complete_shown = false
 	_new_sim()
@@ -224,6 +241,7 @@ func advance(delta: float) -> void:
 		last_result = {"score": sim.score, "best": best, "recent": store.current()["recent"].duplicate(), "new_best": r["new_best"], "unlocked": r["unlocked"]}
 	if screen == Screen.OVER and not _complete_shown and sim.game_over_ready():
 		_complete_shown = true
+		clear_effects()
 		if break_timer.run_ended():
 			screen = Screen.BREAK
 			shell.show_break()
@@ -374,7 +392,7 @@ func _draw_ui(w: float, h: float) -> void:
 	var vmin := minf(w, h)
 	if screen == Screen.PLAY or screen == Screen.OVER:
 		_text(str(sim.score), h * 0.05 + vmin * 0.11, int(clampf(vmin * 0.11, 48, 100) * 1.4), Color.WHITE)
-	if pop_time < tuning.pop_seconds and pop_text != "":
+	if pop_visible():
 		var a := 1.0 - pop_time / tuning.pop_seconds
 		_text(pop_text, h * 0.18 + vmin * 0.045, int(clampf(vmin * 0.045, 20, 36) * 1.6), Color(1, 1, 1, a))
 	var small := int(maxf(vmin * 0.03, 16.0))
