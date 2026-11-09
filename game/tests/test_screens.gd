@@ -1,0 +1,147 @@
+extends TestCase
+## Shell screens through the real scene, headless.
+
+const TMP := "user://test_screens.json"
+
+
+func _main(profiles: int = 1) -> Node:
+	DirAccess.remove_absolute(TMP)
+	var seed_store := ProfileStore.new(TMP)
+	seed_store.load_file()
+	seed_store.rename(seed_store.current_id, "Mia")
+	for i in profiles - 1:
+		seed_store.add_profile("Kid%d" % i)
+	seed_store.save()
+	var main: Node = load("res://scenes/main.tscn").instantiate()
+	main.store_path = TMP
+	main.settings = GameSettings.load_from("user://test_screens.cfg")
+	tree.root.add_child(main)
+	return main
+
+
+func _free(main: Node) -> void:
+	tree.root.remove_child(main)
+	main.free()
+	DirAccess.remove_absolute(TMP)
+
+
+func _buttons(n: Node, out: Array) -> Array:
+	if n is BaseButton:
+		out.append(n)
+	for c in n.get_children():
+		_buttons(c, out)
+	return out
+
+
+func _labels(n: Node, out: Array) -> Array:
+	if n is Label or n is Button:
+		out.append(n.text)
+	for c in n.get_children():
+		_labels(c, out)
+	return out
+
+
+func _check_buttons(main: Node, where: String) -> void:
+	var bs := _buttons(main.shell, [])
+	check(bs.size() > 0, "%s has buttons" % where)
+	for b in bs:
+		check(b.custom_minimum_size.x >= 64.0 and b.custom_minimum_size.y >= 64.0, "%s button at least 64" % where)
+		if b is KButton:
+			check(b.icon_kind != "", "%s button has icon" % where)
+
+
+func test_single_profile_skips_who_and_title_shows_name() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	check_eq(main.screen, main.Screen.START, "title first")
+	var texts := _labels(main.shell, [])
+	check("Hi, Mia!" in texts, "name on title")
+	check("Best 0" in texts, "best on title")
+	check("Best 5" in texts and "Best 40" in texts, "locked styles show needed score")
+	_check_buttons(main, "title")
+	_free(main)
+
+
+func test_several_profiles_show_who() -> void:
+	var main := _main(3)
+	await tree.process_frame
+	check_eq(main.screen, main.Screen.WHO, "who first")
+	var texts := _labels(main.shell, [])
+	check("Mia" in texts and "Kid0" in texts and "Kid1" in texts, "names shown")
+	_check_buttons(main, "who")
+	main.choose_profile(main.store.profiles[1]["id"])
+	check_eq(main.screen, main.Screen.START)
+	await tree.process_frame
+	check("Hi, Kid0!" in _labels(main.shell, []), "chosen name on title")
+	_free(main)
+
+
+func test_run_complete_shows_and_saves() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	main.press()
+	var sim: GameSim = main.sim
+	for target in [0.0, 0.0, 0.0, 0.0, 0.0, 3.0]:
+		sim.phase = asin(clampf(target / sim.amplitude(), -1.0, 1.0))
+		main.press()
+		var n := 0
+		while not sim.fall.is_empty() and n < 1000:
+			main.advance(0.016)
+			n += 1
+	for i in 80:
+		main.advance(0.02)
+	await tree.process_frame
+	check_eq(main.screen, main.Screen.OVER)
+	var texts := _labels(main.shell, [])
+	check("New style: Rose!" in texts, "rose unlocked at five")
+	check("New best 5!" in texts, "new best shown")
+	check("Recent" in texts, "recent shown")
+	_check_buttons(main, "complete")
+	var reloaded := ProfileStore.new(TMP)
+	reloaded.load_file()
+	check_eq(reloaded.current()["best"], 5, "saved to disk")
+	main.press()
+	check_eq(main.screen, main.Screen.PLAY, "tap restarts")
+	_free(main)
+
+
+func test_parent_gate_needs_three_second_hold() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	var gates := []
+	for n in main.shell.get_children():
+		for c in n.get_children():
+			if c is ParentGate:
+				gates.append(c)
+	check_eq(gates.size(), 1, "one corner gate on title")
+	var g: ParentGate = gates[0]
+	var opened := [false]
+	g.opened.connect(func() -> void: opened[0] = true)
+	g.begin_hold()
+	g.advance(2.9)
+	check(not opened[0], "not open at 2.9 s")
+	g.cancel_hold()
+	g.advance(1.0)
+	check(not opened[0], "release resets")
+	g.begin_hold()
+	g.advance(2.0)
+	g.advance(1.1)
+	check(opened[0], "open after 3 s")
+	check(g.size.x >= 64.0 and g.size.y >= 64.0, "gate is a big target")
+	_free(main)
+
+
+func test_parent_area_edits() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	main.open_parent()
+	await tree.process_frame
+	check_eq(main.screen, main.Screen.PARENT)
+	var texts := _labels(main.shell, [])
+	check("Easy" in texts, "Easy default")
+	check("Music  On" in texts and "Sound  On" in texts and ("Voice  On" in texts or "Voice  Off" in texts) and "Break  Off" in texts, "toggles")
+	_check_buttons(main, "parent")
+	main.store.set_difficulty(main.store.current_id, "hard")
+	main.close_parent()
+	check_eq(main.difficulty, "hard", "difficulty applied")
+	_free(main)

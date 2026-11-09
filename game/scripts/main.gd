@@ -2,7 +2,8 @@ extends Node2D
 ## Core game scene: draws the sim (crane, tower, debris, sky, clouds, ground)
 ## and feeds it input. Look and feel ported from prototype/index.html.
 
-enum Screen { START, PLAY, OVER }
+## START is the title screen. WHO and PARENT are the profile picker and parent area.
+enum Screen { START, PLAY, OVER, WHO, PARENT }
 
 const TUNING_PATH := "res://data/tuning.tres"
 const SKY := [
@@ -21,6 +22,15 @@ var best: int = 0
 var difficulty: String = ""
 ## "sunny", "rose", "mint", "sky", "clay", "cream" or "mixed".
 var skin: String = "sunny"
+var store: ProfileStore
+var shell: Shell
+## Where profiles are saved. Tests set this before the node enters the tree.
+var store_path: String = ProfileStore.DEFAULT_PATH
+var last_result: Dictionary = {}
+var _cli_difficulty: String = ""
+var _cli_skin: String = ""
+var _complete_shown: bool = false
+var _demo_wait: float = 0.0
 var pop_text: String = ""
 var pop_time: float = 99.0
 var clouds: Array = []
@@ -37,23 +47,90 @@ func _ready() -> void:
 	tuning = load(TUNING_PATH)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--difficulty="):
-			difficulty = a.substr(13)
+			_cli_difficulty = a.substr(13)
 		elif a.begins_with("--skin="):
-			skin = a.substr(7)
+			_cli_skin = a.substr(7)
 	_font = ThemeDB.fallback_font
 	if settings == null:
 		settings = GameSettings.load_from()
+	store = ProfileStore.new(store_path)
+	store.load_file()
+	apply_profile()
 	audio = AudioManager.new()
 	audio.settings = settings
 	add_child(audio)
 	_build_sprites()
 	_new_sim()
+	shell = Shell.new()
+	shell.setup(self, store)
+	add_child(shell)
+	if store.profiles.size() > 1:
+		go_who()
+	else:
+		go_home()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for i in 9:
 		clouds.append({"x": rng.randf(), "y": rng.randf() * 3.0, "s": 0.6 + rng.randf() * 0.9, "v": 0.004 + rng.randf() * 0.01})
 	get_viewport().size_changed.connect(_on_resize)
 	_on_resize()
+
+
+## Takes difficulty, style and best score from the chosen profile.
+func apply_profile() -> void:
+	var p := store.current()
+	difficulty = _cli_difficulty if _cli_difficulty != "" else p["difficulty"]
+	skin = _cli_skin if _cli_skin != "" else p["style"]
+	best = p["best"]
+	if settings != null:
+		settings.player_name = p["name"]
+
+
+func go_home() -> void:
+	screen = Screen.START
+	_complete_shown = false
+	_new_sim()
+	shell.show_title()
+
+
+func go_who() -> void:
+	screen = Screen.WHO
+	_new_sim()
+	shell.show_who()
+
+
+func choose_profile(id: int) -> void:
+	store.current_id = id
+	store.save()
+	apply_profile()
+	go_home()
+
+
+func pick_style(style: String) -> void:
+	if store.set_style(store.current_id, style):
+		store.save()
+		apply_profile()
+		go_home()
+
+
+func open_parent() -> void:
+	screen = Screen.PARENT
+	shell.show_parent()
+
+
+func close_parent() -> void:
+	apply_profile()
+	if store.profiles.size() > 1:
+		go_who()
+	else:
+		go_home()
+
+
+func start_play() -> void:
+	shell.clear()
+	_complete_shown = false
+	_new_sim()
+	screen = Screen.PLAY
 
 
 func _new_sim() -> void:
@@ -89,20 +166,21 @@ func _on_resize() -> void:
 func press() -> void:
 	match screen:
 		Screen.START:
-			screen = Screen.PLAY
+			start_play()
 		Screen.PLAY:
 			if sim.drop():
 				audio.play_drop()
 		Screen.OVER:
 			if sim.game_over_ready():
-				_new_sim()
-				screen = Screen.PLAY
+				start_play()
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	# Touch arrives as emulated mouse buttons, so only mouse and keys are handled.
+	# Buttons consume their own taps; on the title only the Play button starts.
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		press()
+		if screen == Screen.PLAY or screen == Screen.OVER:
+			press()
 	elif event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
 		press()
 
@@ -113,7 +191,10 @@ func _process(delta: float) -> void:
 
 
 func advance(delta: float) -> void:
-	sim.step(delta)
+	if screen == Screen.START:
+		_demo(delta)
+	if screen != Screen.PARENT and screen != Screen.WHO:
+		sim.step(delta)
 	pop_time += delta
 	confetti.step(delta)
 	sun.step(delta)
@@ -134,10 +215,28 @@ func advance(delta: float) -> void:
 			best = maxi(best, sim.score)
 	if screen == Screen.PLAY and sim.state == GameSim.State.OVER:
 		screen = Screen.OVER
+		var r := store.record_run(store.current_id, sim.score)
+		store.save()
+		best = store.current()["best"]
+		last_result = {"score": sim.score, "best": best, "recent": store.current()["recent"].duplicate(), "new_best": r["new_best"], "unlocked": r["unlocked"]}
+	if screen == Screen.OVER and not _complete_shown and sim.game_over_ready():
+		_complete_shown = true
+		shell.show_complete(last_result)
 	for c in clouds:
 		c["x"] += c["v"] * delta
 		if c["x"] > 1.3:
 			c["x"] = -0.3
+
+
+## Title backdrop: a tower that builds itself, then starts over.
+func _demo(delta: float) -> void:
+	if sim.state == GameSim.State.OVER or sim.score >= 3:
+		_demo_wait += delta
+		if _demo_wait > 1.5:
+			_demo_wait = 0.0
+			_new_sim()
+	elif sim.fall.is_empty() and absf(sim.hang_pos()["x"]) < 0.05:
+		sim.drop()
 
 
 # ---------- drawing ----------
@@ -265,21 +364,11 @@ func _text(s: String, y: float, size: int, col: Color, shadow: bool = true) -> v
 
 func _draw_ui(w: float, h: float) -> void:
 	var vmin := minf(w, h)
-	if screen != Screen.START:
+	if screen == Screen.PLAY or screen == Screen.OVER:
 		_text(str(sim.score), h * 0.05 + vmin * 0.11, int(clampf(vmin * 0.11, 48, 100) * 1.4), Color.WHITE)
 	if pop_time < 0.7 and pop_text != "":
 		var a := 1.0 - pop_time / 0.7
 		_text(pop_text, h * 0.18 + vmin * 0.045, int(clampf(vmin * 0.045, 20, 36) * 1.6), Color(1, 1, 1, a))
 	var small := int(maxf(vmin * 0.03, 16.0))
-	if screen == Screen.START:
-		draw_rect(Rect2(0, 0, w, h), Color(0.16, 0.31, 0.55, 0.5))
-		_text("Tower Craft", h * 0.38, int(clampf(vmin * 0.08, 34, 64) * 1.6), Color("#ffc93c"))
-		_text("Drop the houses. Land them perfectly to grow back.", h * 0.45, small, Color.WHITE)
-		_text("Tap / click / Space to start", h * 0.52, small, Color.WHITE)
-	elif screen == Screen.PLAY and sim.fall.is_empty() and sim.score == 0:
+	if screen == Screen.PLAY and sim.fall.is_empty() and sim.score == 0:
 		_text("Tap / click / Space to drop", h * 0.97, small, Color.WHITE)
-	elif screen == Screen.OVER and sim.game_over_ready():
-		draw_rect(Rect2(0, 0, w, h), Color(0.16, 0.31, 0.55, 0.5))
-		_text("Game Over", h * 0.4, int(clampf(vmin * 0.08, 34, 64) * 1.6), Color("#ffc93c"))
-		_text("Score %d  -  Best %d" % [sim.score, best], h * 0.47, int(small * 1.5), Color.WHITE)
-		_text("Tap / click / Space to play again", h * 0.54, small, Color.WHITE)

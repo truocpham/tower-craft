@@ -4,6 +4,9 @@ extends TestCase
 
 func test_scripted_run() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
+	main.store_path = "user://test_smoke.json"
+	main.settings = GameSettings.load_from("user://test_smoke.cfg")
+	DirAccess.remove_absolute(main.store_path)
 	tree.root.add_child(main)
 	await tree.process_frame
 	check_eq(main.screen, main.Screen.START, "start screen")
