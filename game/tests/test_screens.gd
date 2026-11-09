@@ -213,3 +213,13 @@ func test_popup_hidden_on_run_complete() -> void:
 	check(not main.pop_visible(), "no pop-up on run complete")
 	check_eq(main.confetti.pieces.size(), 0, "no confetti on run complete")
 	_free(main)
+
+
+func test_popup_draws_above_block() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	check(main.pop_layer != null, "pop-up has its own layer")
+	check(main.pop_layer.get_parent() == main, "layer is a child of the game node")
+	check(main.pop_layer.z_index > main.z_index, "pop-up z above the block drawing")
+	check(main.pop_layer.z_index >= PopupLayer.Z, "pop-up z is high")
+	_free(main)

@@ -33,6 +33,8 @@ var _complete_shown: bool = false
 var _demo_wait: float = 0.0
 var pop_text: String = ""
 var pop_time: float = 99.0
+## Node that draws the pop-up above the block and house.
+var pop_layer: PopupLayer
 var clouds: Array = []
 var textures: Dictionary = {}
 var _seen_landing: int = 0
@@ -65,6 +67,9 @@ func _ready() -> void:
 	shell = Shell.new()
 	shell.setup(self, store)
 	add_child(shell)
+	pop_layer = PopupLayer.new()
+	pop_layer.main = self
+	add_child(pop_layer)
 	if store.profiles.size() > 1:
 		go_who()
 	else:
@@ -207,6 +212,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	advance(delta)
 	queue_redraw()
+	if pop_layer != null:
+		pop_layer.queue_redraw()
 
 
 func advance(delta: float) -> void:
@@ -388,13 +395,28 @@ func _text(s: String, y: float, size: int, col: Color, shadow: bool = true) -> v
 	draw_string(_font, Vector2(0, y), s, HORIZONTAL_ALIGNMENT_CENTER, w, size, col)
 
 
+## Called by the pop-up layer; draws on its canvas item, over a dark pill so the
+## white text stays readable on top of houses and sky.
+func draw_popup(ci: CanvasItem) -> void:
+	if sim == null or not pop_visible():
+		return
+	var vmin := minf(sim.view_w, sim.view_h)
+	var a := 1.0 - pop_time / tuning.pop_seconds
+	var size := int(clampf(vmin * 0.045, 20, 36) * 1.6)
+	var y := sim.view_h * 0.18 + vmin * 0.045
+	var tw := _font.get_string_size(pop_text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	var pad := size * 0.4
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.12, 0.2, 0.35, 0.6 * a)
+	box.set_corner_radius_all(int(size))
+	ci.draw_style_box(box, Rect2((sim.view_w - tw) / 2.0 - pad * 1.5, y - size * 0.95, tw + pad * 3.0, size * 1.35))
+	ci.draw_string(_font, Vector2(0, y), pop_text, HORIZONTAL_ALIGNMENT_CENTER, sim.view_w, size, Color(1, 1, 1, a))
+
+
 func _draw_ui(w: float, h: float) -> void:
 	var vmin := minf(w, h)
 	if screen == Screen.PLAY or screen == Screen.OVER:
 		_text(str(sim.score), h * 0.05 + vmin * 0.11, int(clampf(vmin * 0.11, 48, 100) * 1.4), Color.WHITE)
-	if pop_visible():
-		var a := 1.0 - pop_time / tuning.pop_seconds
-		_text(pop_text, h * 0.18 + vmin * 0.045, int(clampf(vmin * 0.045, 20, 36) * 1.6), Color(1, 1, 1, a))
 	var small := int(maxf(vmin * 0.03, 16.0))
 	if screen == Screen.PLAY and sim.fall.is_empty() and sim.score == 0:
 		_text("Tap / click / Space to drop", h * 0.97, small, Color.WHITE)
