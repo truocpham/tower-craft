@@ -71,5 +71,5 @@ Done:
 
 Next:
 
-- [ ] Move leftover tuning literals into `tuning.tres` (#14)
+- [x] Move leftover tuning literals into `tuning.tres` (#14)
 - [ ] Ticket #18

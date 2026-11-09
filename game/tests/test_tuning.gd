@@ -49,5 +49,20 @@ func test_shared_values() -> void:
 	check_near(t.camera_ease_per_second, 3.5)
 
 
+func test_moved_literals() -> void:
+	check_near(t.ground_screen_fraction, 0.9)
+	check_near(t.fall_rotation_damping, 0.9)
+	check_near(t.max_step_seconds, 0.05)
+	check_near(t.debris_cull_below_camera_units, 12.0)
+	check_near(t.sky_full_altitude_units, 60.0)
+	check_near(t.pop_seconds, 0.7)
+	check_near(t.demo_restart_delay_seconds, 1.5)
+	check_eq(t.demo_tower_blocks, 3)
+	check_near(t.demo_drop_window_units, 0.05)
+	var sim := GameSim.new(t)
+	sim.set_view(1000.0, 2000.0)
+	check_near(sim.ground_y(), 1800.0)
+
+
 func test_preset_lookup() -> void:
 	check(t.preset("hard") == t.hard, "hard lookup")
