@@ -37,6 +37,10 @@ extends Resource
 @export var demo_tower_blocks: int = 0
 @export var demo_drop_window_units: float = 0.0
 
+@export_group("Parent area")
+## Widest the parent area content gets, in screen units; wider windows centre it.
+@export var parent_column_max_width: float = 0.0
+
 @export_group("Break reminder")
 ## Minutes of play the parent can choose from, and the default.
 @export var break_minutes_options: PackedInt32Array = PackedInt32Array()

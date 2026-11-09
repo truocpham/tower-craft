@@ -147,6 +147,32 @@ func test_parent_area_edits() -> void:
 	_free(main)
 
 
+func _parent_column_width(size: Vector2i) -> float:
+	var main := _main(1)
+	tree.root.content_scale_size = Vector2i.ZERO
+	tree.root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	tree.root.size = size
+	await tree.process_frame
+	main.open_parent()
+	await tree.process_frame
+	await tree.process_frame
+	var w := -1.0
+	for b in _buttons(main.shell, []):
+		if b.text.begins_with("Reset scores"):
+			w = (b.get_parent() as Control).size.x
+	_free(main)
+	return w
+
+
+func test_parent_area_column_capped_on_wide_windows() -> void:
+	var cap: float = load("res://data/tuning.tres").parent_column_max_width
+	check(cap > 0.0, "cap set in tuning")
+	var wide := await _parent_column_width(Vector2i(3400, 1920))
+	check(wide > 0.0 and wide <= cap + 1.0, "wide window column capped (%s)" % wide)
+	var narrow := await _parent_column_width(Vector2i(540, 960))
+	check(narrow > 0.0 and narrow >= 540.0 - 81.0, "narrow window keeps full width (%s)" % narrow)
+
+
 ## Plays one perfect landing on a fresh run.
 func _perfect(main: Node) -> void:
 	main.press()
