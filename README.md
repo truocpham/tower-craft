@@ -19,7 +19,7 @@ A one-tap house-stacking game for children, made with Godot 4.7 for iPad.
 ## Screens
 
 - **Who is playing:** big profile tiles, skipped with one profile.
-- **Title:** child's name, live demo tower, Play, best score, six house styles.
+- **Title:** child's name, a player picker (tap a player to switch, Add for a new one, up to four), live demo tower, Play, best score, six house styles.
 - **Run complete:** score, best, last five, new style, Again and Home. Tap or Space also restarts.
 - **Parent area:** hold the corner gear for 3 seconds. Difficulty (Easy default), players (up to four), music, sound, voice, break reminder (off by default; every 10, 20 or 30 minutes, default 20; the "time for a break" screen appears after the current run ends), reset scores.
 - **Styles:** Sunny is open. Rose, Mint, Sky, Clay and Mixed unlock at best 5, 10, 15, 25 and 40.
@@ -70,6 +70,7 @@ Done:
 - [x] Profiles, title, styles, run complete and parent area (#4)
 - [x] Move leftover tuning literals into `tuning.tres` (#14)
 - [x] Break reminder and title screen sun overlap (#18)
+- [x] Player picker and add player on the title screen (#30)
 
 Next:
 

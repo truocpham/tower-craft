@@ -108,6 +108,11 @@ static func clean_name(n: String) -> String:
 	return n if n != "" else "Player"
 
 
+## True when the name has at least one visible character once trimmed.
+static func is_valid_name(n: String) -> bool:
+	return n.strip_edges() != ""
+
+
 func can_add() -> bool:
 	return profiles.size() < MAX_PROFILES
 
