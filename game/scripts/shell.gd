@@ -188,6 +188,11 @@ func show_title() -> void:
 	var best := _box(false, 12)
 	best.add_child(_icon("star", 56, GOLD))
 	best.add_child(_label("Best %d" % prof["best"], 52))
+	var rename := KButton.new("Rename", "pencil", GREY, 280, 36)
+	rename.custom_minimum_size.y = 96
+	rename.pressed.connect(func() -> void:
+		_ask_text("Your name", prof["name"], func(t: String) -> void: main.rename_player(t), false))
+	best.add_child(rename)
 	v.add_child(best)
 	v.add_child(_style_picker(prof))
 	var play := KButton.new("Play", "play", GREEN, 520, 60)
