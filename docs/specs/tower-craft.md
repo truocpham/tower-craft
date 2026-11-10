@@ -1,7 +1,7 @@
 ---
 status: active
 milestone: M1
-tickets: [1, 2, 3, 4, 5, 6, 10, 11, 14, 18, 21]
+tickets: [1, 2, 3, 4, 5, 6, 10, 11, 14, 18, 21, 30, 31, 32]
 ---
 
 # Tower Craft
@@ -46,7 +46,7 @@ Children under 10 in the owner's family have no stacking game made for them. The
 - AC-10: The game plays at the prototype's feel on Hard, and Easy is visibly gentler (wider perfect window, slower swing).
 - AC-11: Profiles can be created and chosen; each keeps name, style, difficulty, best score and recent scores across restarts.
 - AC-12: Styles unlock at best scores 5, 10, 15, 25 and 40, and locked styles show the score needed.
-- AC-13: Settings, profile edits and reset progress are reachable only through a 3-second press-and-hold.
+- AC-13: Difficulty, sound, music, voice, break reminder, deleting a player and reset progress are reachable only through a 3-second press-and-hold. A player's own name and skin are not gated (AC-25).
 - AC-14: Title, game and run-complete screens exist, show the child's name, score, best and recent scores, and have buttons of at least 64 pt.
 - AC-15: Sound effects, looping music, confetti on milestones, perfect pop-ups and optional voice cheers with the child's name work, with separate music, sound and voice toggles.
 - AC-16: The game uses no network and has no ads, purchases, analytics or external links.
@@ -55,6 +55,12 @@ Children under 10 in the owner's family have no stacking game made for them. The
 - AC-19: `README.md` is written in a short, scannable style (no emoji): one-line summary, TL;DR box, short bullets, one idea per section, single-action numbered steps. It covers what the game is, a quick start (install Godot, open the project, run the tests), the iPad install and weekly reinstall (linked to `docs/BUILD_IPAD.md`), the project layout, and what is done versus next.
 - AC-20: `docs/BUILD_IPAD.md` uses the same style: short numbered single-action steps, with warnings and tips in callouts.
 - AC-21: A ticket that changes how to run, test or build, or what is done, updates `README.md` in the same PR.
+- AC-22: The title screen shows the current player and lets the child switch between profiles, up to four, persisted across restarts.
+- AC-23: A child can add a player without the hold; the add control hides at four players. Deleting a player stays behind the hold.
+- AC-24: The current player's name shows in game, run-complete and cheers.
+- AC-25: The child can rename their player and pick a skin from the title screen without the hold.
+- AC-26: Names are trimmed, 1 to 12 characters, not blank. The skin is one of the six house styles; locked styles cannot be picked.
+- AC-27: A Leaderboard screen from the title ranks all local players by best score, highlights the current player and lists zero-score players last.
 
 ## Out of scope
 
@@ -70,3 +76,6 @@ App Store and TestFlight release, ads, purchases, accounts, online features, ana
 - 2026-11-09: Targets iPad Air, built on a MacBook Pro M3 Pro. Why: owner's devices.
 - 2026-11-09: README and the iPad guide use a short, scannable ADHD-friendly style without emoji, and each ticket keeps the README current. Why: owner choice, so the weekly reinstall and quick start are easy to find.
 - 2026-11-09: Difficulty default is Easy; styles unlock by best score; no currency. Why: proposed defaults the owner accepted.
+- 2026-11-10: Multiple players means choosing among up to four local profiles, not simultaneous play. Why: owner choice.
+- 2026-11-10: Tower skin is the existing house style. Leaderboard is local, by best score, on its own screen. Why: owner choice.
+- 2026-11-10: Name and skin editing is open to the child; everything else stays gated; the parent deletes players. Why: owner choice.
