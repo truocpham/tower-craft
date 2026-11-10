@@ -130,3 +130,33 @@ func test_wrongly_typed_fields_fall_back() -> void:
 	check(s.profiles[0]["id"] != s.profiles[1]["id"], "unique ids")
 	check(not s.current().is_empty(), "current valid")
 	DirAccess.remove_absolute(TMP)
+
+
+func _ids(list: Array) -> Array:
+	var out := []
+	for p in list:
+		out.append(p["name"])
+	return out
+
+
+func test_ranked_orders_by_best_with_ties_in_creation_order() -> void:
+	var s := _fresh()
+	s.rename(s.current_id, "A")
+	var b := s.add_profile("B")
+	var c := s.add_profile("C")
+	var d := s.add_profile("D")
+	s.record_run(c["id"], 7)
+	s.record_run(d["id"], 7)
+	s.record_run(b["id"], 3)
+	check_eq(_ids(s.ranked()), ["C", "D", "B", "A"], "highest first, ties by creation, zero last")
+	check_eq(_ids(s.profiles), ["A", "B", "C", "D"], "stored order untouched")
+
+
+func test_ranked_zero_score_players_share_creation_order_at_bottom() -> void:
+	var s := _fresh()
+	s.rename(s.current_id, "A")
+	s.add_profile("B")
+	var c := s.add_profile("C")
+	s.record_run(c["id"], 1)
+	check_eq(_ids(s.ranked()), ["C", "A", "B"], "zeros last in creation order")
+	check_eq(s.ranked().size(), 3)

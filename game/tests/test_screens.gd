@@ -383,3 +383,27 @@ func test_title_rename_and_skin_open_and_persist() -> void:
 	check_eq(reloaded.current()["style"], "rose", "skin persists")
 	_check_buttons(main, "title rename")
 	_free(main)
+
+
+func test_leaderboard_screen() -> void:
+	var main := _main(3)
+	await tree.process_frame
+	var st: ProfileStore = main.store
+	st.record_run(st.profiles[2]["id"], 4)
+	st.record_run(st.profiles[1]["id"], 2)
+	main.choose_profile(st.profiles[1]["id"])
+	await tree.process_frame
+	check("Leaderboard" in _labels(main.shell, []), "button on title")
+	main.go_board()
+	await tree.process_frame
+	check_eq(main.screen, main.Screen.BOARD, "board shown")
+	var texts := _labels(main.shell, [])
+	check(texts.find("Kid1") < texts.find("Kid0") and texts.find("Kid0") < texts.find("Mia"), "ranked order")
+	check("4" in texts and "2" in texts, "scores shown")
+	_check_buttons(main, "board")
+	var back: Array = _buttons(main.shell, []).filter(func(b): return b.text == "Back")
+	check_eq(back.size(), 1, "one back button")
+	check(back[0].custom_minimum_size.y >= 64.0 and back[0].custom_minimum_size.x >= 64.0, "back at least 64")
+	back[0].pressed.emit()
+	check_eq(main.screen, main.Screen.START, "back to title")
+	_free(main)
