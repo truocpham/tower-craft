@@ -358,3 +358,28 @@ func test_title_layout_holds_in_sizes() -> void:
 			check(Rect2(Vector2.ZERO, Vector2(size)).encloses(r), "chip %s inside %s" % [b.text, size])
 			check(b.size.x >= 64.0 and b.size.y >= 64.0, "chip big enough")
 		_free(main)
+
+
+func test_title_rename_and_skin_open_and_persist() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	check("Rename" in _labels(main.shell, []), "rename button on title")
+	check(not main.rename_player("   "), "blank name refused")
+	check_eq(main.store.current()["name"], "Mia", "blank did not rename")
+	check(main.rename_player("  Abcdefghijklmnop  "), "rename works without the hold")
+	await tree.process_frame
+	check_eq(main.store.current()["name"], "Abcdefghijkl", "trimmed and cut to 12")
+	check("Hi, Abcdefghijkl!" in _labels(main.shell, []), "new name on title")
+	check_eq(main.settings.player_name, "Abcdefghijkl", "cheers use new name")
+	main.pick_style("mixed")
+	check_eq(main.store.current()["style"], "sunny", "locked skin refused")
+	main.store.current()["best"] = 5
+	main.pick_style("rose")
+	await tree.process_frame
+	check_eq(main.skin, "rose", "skin applied in game")
+	var reloaded := ProfileStore.new(TMP)
+	reloaded.load_file()
+	check_eq(reloaded.current()["name"], "Abcdefghijkl", "name persists")
+	check_eq(reloaded.current()["style"], "rose", "skin persists")
+	_check_buttons(main, "title rename")
+	_free(main)

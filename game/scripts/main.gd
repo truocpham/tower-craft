@@ -141,6 +141,17 @@ func add_player(n: String) -> bool:
 	return true
 
 
+## Renames the current player from the title screen. False when the name is blank.
+func rename_player(n: String) -> bool:
+	if not ProfileStore.is_valid_name(n):
+		return false
+	store.rename(store.current_id, n)
+	store.save()
+	apply_profile()
+	go_home()
+	return true
+
+
 func pick_style(style: String) -> void:
 	if store.set_style(store.current_id, style):
 		store.save()
