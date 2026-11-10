@@ -128,6 +128,19 @@ func choose_profile(id: int) -> void:
 	go_home()
 
 
+## Adds a player from the title screen and makes them current. False when the
+## name is blank or four players already exist.
+func add_player(n: String) -> bool:
+	if not ProfileStore.is_valid_name(n) or not store.can_add():
+		return false
+	var p := store.add_profile(n)
+	store.current_id = p["id"]
+	store.save()
+	apply_profile()
+	go_home()
+	return true
+
+
 func pick_style(style: String) -> void:
 	if store.set_style(store.current_id, style):
 		store.save()

@@ -269,3 +269,92 @@ func test_popup_draws_above_block() -> void:
 	check(main.pop_layer.z_index > main.z_index, "pop-up z above the block drawing")
 	check(main.pop_layer.z_index >= PopupLayer.Z, "pop-up z is high")
 	_free(main)
+
+
+func _chips(main: Node) -> Array:
+	var out := []
+	for b in _buttons(main.shell, []):
+		if b.get_parent() is HFlowContainer:
+			out.append(b)
+	return out
+
+
+func _chip_texts(main: Node) -> Array:
+	var out := []
+	for b in _chips(main):
+		out.append(b.text)
+	return out
+
+
+func test_title_player_picker_switch_and_persist() -> void:
+	var main := _main(3)
+	await tree.process_frame
+	main.choose_profile(main.store.profiles[0]["id"])
+	await tree.process_frame
+	var chips := _chip_texts(main)
+	check("Mia" in chips and "Kid0" in chips and "Kid1" in chips, "all players on title")
+	check("Add" in chips, "add chip with room")
+	for b in _chips(main):
+		if b.text == "Kid1":
+			b.pressed.emit()
+	check_eq(main.store.current()["name"], "Kid1", "switched")
+	await tree.process_frame
+	check("Hi, Kid1!" in _labels(main.shell, []), "title shows chosen player")
+	check_eq(main.settings.player_name, "Kid1", "cheers use chosen name")
+	var reloaded := ProfileStore.new(TMP)
+	reloaded.load_file()
+	check_eq(reloaded.current()["name"], "Kid1", "choice persists")
+	_check_buttons(main, "title picker")
+	_free(main)
+
+
+func test_title_add_player_open_and_limit() -> void:
+	var main := _main(1)
+	await tree.process_frame
+	check(main.add_player("  Zoe  "), "add works without the hold")
+	await tree.process_frame
+	check_eq(main.store.current()["name"], "Zoe", "name trimmed and chosen")
+	check_eq(main.store.current()["style"], "sunny", "style defaults to Sunny")
+	check_eq(main.store.current()["difficulty"], "easy", "difficulty defaults to Easy")
+	check(not main.add_player("   "), "blank refused")
+	check_eq(main.store.profiles.size(), 2, "blank did not add")
+	check(main.add_player("Abcdefghijklmnop"), "long name accepted")
+	check_eq(main.store.current()["name"].length(), 12, "name cut to 12")
+	check(main.add_player("D"), "fourth")
+	await tree.process_frame
+	check_eq(main.store.profiles.size(), 4, "four players")
+	check("Add" not in _chip_texts(main), "add hidden at four")
+	check(not main.add_player("E"), "fifth refused")
+	check_eq(main.store.profiles.size(), 4, "still four")
+	var reloaded := ProfileStore.new(TMP)
+	reloaded.load_file()
+	check_eq(reloaded.profiles.size(), 4, "persisted")
+	check_eq(reloaded.current()["name"], "D", "new player persisted as current")
+	_free(main)
+
+
+func test_title_has_no_delete_or_reset() -> void:
+	var main := _main(2)
+	await tree.process_frame
+	main.choose_profile(main.store.current_id)
+	await tree.process_frame
+	for t in _labels(main.shell, []):
+		check(not t.begins_with("Reset") and not t.begins_with("Delete"), "no gated action on title")
+	_free(main)
+
+
+func test_title_layout_holds_in_sizes() -> void:
+	for size in [Vector2i(1640, 2360), Vector2i(2360, 1640), Vector2i(900, 700)]:
+		var main := _main(4)
+		tree.root.content_scale_size = Vector2i.ZERO
+		tree.root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+		tree.root.size = size
+		await tree.process_frame
+		main.choose_profile(main.store.current_id)
+		await tree.process_frame
+		await tree.process_frame
+		for b in _chips(main):
+			var r := Rect2(b.global_position, b.size)
+			check(Rect2(Vector2.ZERO, Vector2(size)).encloses(r), "chip %s inside %s" % [b.text, size])
+			check(b.size.x >= 64.0 and b.size.y >= 64.0, "chip big enough")
+		_free(main)

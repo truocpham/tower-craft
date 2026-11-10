@@ -184,6 +184,7 @@ func show_title() -> void:
 	m.add_child(v)
 	v.add_child(_label("Hi, %s!" % prof["name"], 80, GOLD))
 	v.add_child(_label("Tower Craft", 52))
+	v.add_child(_player_picker())
 	var best := _box(false, 12)
 	best.add_child(_icon("star", 56, GOLD))
 	best.add_child(_label("Best %d" % prof["best"], 52))
@@ -196,16 +197,55 @@ func show_title() -> void:
 	pc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pc.add_child(play)
 	v.add_child(pc)
-	if store.profiles.size() > 1:
-		var sw := KButton.new("", "people", BLUE)
-		sw.anchor_left = 0.0
-		sw.offset_left = 32
-		sw.offset_top = 32
-		sw.offset_right = 32 + ParentGate.SIZE
-		sw.offset_bottom = 32 + ParentGate.SIZE
-		sw.pressed.connect(main.go_who)
-		r.add_child(sw)
 	_corner_gate(r)
+
+
+## One chip per player (the current one outlined in gold) and an add chip while there is room.
+func _player_picker() -> Control:
+	var flow := HFlowContainer.new()
+	flow.alignment = FlowContainer.ALIGNMENT_CENTER
+	flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flow.add_theme_constant_override("h_separation", 16)
+	flow.add_theme_constant_override("v_separation", 16)
+	for p in store.profiles:
+		flow.add_child(_player_chip(p))
+	if store.can_add():
+		var add := KButton.new("Add", "plus", BLUE, 200, 36)
+		add.custom_minimum_size.y = 96
+		add.pressed.connect(func() -> void:
+			_ask_text("New player", "", func(t: String) -> void: main.add_player(t), false))
+		flow.add_child(add)
+	return flow
+
+
+func _player_chip(p: Dictionary) -> Control:
+	var chosen: bool = p["id"] == store.current_id
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(240, 96)
+	b.focus_mode = Control.FOCUS_NONE
+	b.text = p["name"]
+	b.clip_text = true
+	b.add_theme_font_size_override("font_size", 36)
+	b.add_theme_color_override("font_color", Color.WHITE)
+	b.add_theme_color_override("font_hover_color", Color.WHITE)
+	b.add_theme_color_override("font_pressed_color", Color.WHITE)
+	for slot in ["normal", "hover", "pressed", "focus"]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = TILE_OPEN if slot != "pressed" else Color(0.2, 0.3, 0.5, 1.0)
+		sb.set_corner_radius_all(28)
+		sb.content_margin_left = 96
+		sb.content_margin_right = 12
+		if chosen:
+			sb.border_color = GOLD
+			sb.set_border_width_all(6)
+		b.add_theme_stylebox_override(slot, sb)
+	var h := _house(p["style"], 64)
+	h.position = Vector2(16, 12)
+	h.size = Vector2(64, 72)
+	b.add_child(h)
+	var id: int = p["id"]
+	b.pressed.connect(func() -> void: main.choose_profile(id))
+	return b
 
 
 func _style_picker(prof: Dictionary) -> Control:
@@ -504,7 +544,7 @@ func _open_modal(title: String) -> VBoxContainer:
 	return v
 
 
-func _ask_text(title: String, initial: String, done: Callable) -> void:
+func _ask_text(title: String, initial: String, done: Callable, allow_blank: bool = true) -> void:
 	var v := _open_modal(title)
 	var le := LineEdit.new()
 	le.text = initial
@@ -519,6 +559,9 @@ func _ask_text(title: String, initial: String, done: Callable) -> void:
 		var t := le.text
 		close_modal()
 		done.call(t))
+	if not allow_blank:
+		ok.disabled = not ProfileStore.is_valid_name(le.text)
+		le.text_changed.connect(func(t: String) -> void: ok.disabled = not ProfileStore.is_valid_name(t))
 	var no := KButton.new("Back", "x", GREY, 260, 40)
 	no.pressed.connect(close_modal)
 	row.add_child(ok)
