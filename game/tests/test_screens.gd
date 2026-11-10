@@ -407,3 +407,19 @@ func test_leaderboard_screen() -> void:
 	back[0].pressed.emit()
 	check_eq(main.screen, main.Screen.START, "back to title")
 	_free(main)
+
+
+func test_leaderboard_layout_holds_in_sizes() -> void:
+	for size in [Vector2i(1640, 2360), Vector2i(2360, 1640), Vector2i(900, 700)]:
+		var main := _main(4)
+		tree.root.content_scale_size = Vector2i.ZERO
+		tree.root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+		tree.root.size = size
+		await tree.process_frame
+		main.go_board()
+		await tree.process_frame
+		await tree.process_frame
+		for b in _buttons(main.shell, []):
+			var r := Rect2(b.global_position, b.size)
+			check(Rect2(Vector2.ZERO, Vector2(size)).encloses(r), "board button inside %s" % size)
+		_free(main)
