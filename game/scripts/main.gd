@@ -4,7 +4,7 @@ extends Node2D
 
 ## START is the title screen. WHO and PARENT are the profile picker and parent area.
 ## BREAK is the "time for a break" screen shown after a run when the reminder is due.
-enum Screen { START, PLAY, OVER, WHO, PARENT, BREAK }
+enum Screen { START, PLAY, OVER, WHO, PARENT, BREAK, BOARD }
 
 const TUNING_PATH := "res://data/tuning.tres"
 const SKY := [
@@ -119,6 +119,13 @@ func go_who() -> void:
 	screen = Screen.WHO
 	_new_sim()
 	shell.show_who()
+
+
+func go_board() -> void:
+	clear_effects()
+	screen = Screen.BOARD
+	_new_sim()
+	shell.show_board()
 
 
 func choose_profile(id: int) -> void:

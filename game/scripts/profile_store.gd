@@ -136,6 +136,20 @@ func find(id: int) -> Dictionary:
 	return {}
 
 
+## All profiles, highest best score first. Ties (including zero-score players,
+## who therefore come last) keep the order they were created in.
+func ranked() -> Array:
+	var out: Array = profiles.duplicate()
+	var order := {}
+	for i in out.size():
+		order[out[i]["id"]] = i
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["best"] != b["best"]:
+			return a["best"] > b["best"]
+		return order[a["id"]] < order[b["id"]])
+	return out
+
+
 func current() -> Dictionary:
 	return find(current_id)
 

@@ -202,6 +202,12 @@ func show_title() -> void:
 	pc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pc.add_child(play)
 	v.add_child(pc)
+	var lb := KButton.new("Leaderboard", "bars", BLUE, 520, 40)
+	lb.pressed.connect(main.go_board)
+	var lc := CenterContainer.new()
+	lc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lc.add_child(lb)
+	v.add_child(lc)
 	_corner_gate(r)
 
 
@@ -296,6 +302,76 @@ func _style_tile(style: String, prof: Dictionary) -> Control:
 	if open:
 		b.pressed.connect(func() -> void: main.pick_style(style))
 	return b
+
+
+# ---------- leaderboard ----------
+
+func show_board() -> void:
+	var r := _screen()
+	var bg := ColorRect.new()
+	bg.color = Color("#1d2a44")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	r.add_child(bg)
+	var m := _center(r)
+	m.mouse_filter = Control.MOUSE_FILTER_PASS
+	m.resized.connect(func() -> void: _cap_column(m))
+	_cap_column(m)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 22)
+	m.add_child(v)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 20)
+	var title := _label("Leaderboard", 60, GOLD)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	head.add_child(title)
+	var back := KButton.new("Back", "home", BLUE, 260, 40)
+	back.custom_minimum_size.y = 80
+	back.pressed.connect(main.go_home)
+	head.add_child(back)
+	v.add_child(head)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 16)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	var rank := 0
+	for p in store.ranked():
+		rank += 1
+		list.add_child(_board_row(rank, p))
+
+
+func _board_row(rank: int, p: Dictionary) -> Control:
+	var mine: bool = p["id"] == store.current_id
+	var panel := _panel(Color(0.22, 0.3, 0.5, 1.0) if mine else Color(0.10, 0.16, 0.30, 1.0), 16)
+	panel.custom_minimum_size.y = 120
+	if mine:
+		var sb: StyleBoxFlat = panel.get_theme_stylebox("panel")
+		sb.border_color = GOLD
+		sb.set_border_width_all(8)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 20)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(row)
+	var rk := _label(str(rank), 56, GOLD if mine else Color.WHITE)
+	rk.custom_minimum_size.x = 70
+	row.add_child(rk)
+	var house := _house(p["style"], 80)
+	house.custom_minimum_size = Vector2(88, 88)
+	row.add_child(house)
+	var nm := _label(p["name"], 48)
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	nm.clip_text = true
+	row.add_child(nm)
+	row.add_child(_icon("star", 48, GOLD))
+	var sc := _label(str(p["best"]), 56, GOLD if mine else Color.WHITE)
+	sc.custom_minimum_size.x = 90
+	row.add_child(sc)
+	return panel
 
 
 # ---------- run complete ----------
